@@ -3,7 +3,6 @@ package com.github.maxopoly.finale.combat;
 import com.github.maxopoly.finale.Finale;
 import com.github.maxopoly.finale.combat.event.CritHitEvent;
 import com.github.maxopoly.finale.misc.knockback.KnockbackConfig;
-import java.util.Iterator;
 import java.util.List;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
@@ -17,6 +16,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,6 +30,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.util.CraftVector;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.player.PlayerVelocityEvent;
@@ -57,11 +58,18 @@ public class CombatUtil {
 	}
 
 	//see EntityHuman#attack(Entity) to update this
+	// TODO: This has really fallen out of date and needs to be updated from net.minecraft.world.entity.player.Player.attack
 	public static void attack(net.minecraft.world.entity.player.Player attacker, Entity victim) {
 		CombatConfig config = Finale.getPlugin().getManager().getCombatConfig();
 		if (victim.isAttackable() && !victim.skipAttackInteraction(attacker)) {
-			float damage = (float) attacker.getAttribute(Attributes.ATTACK_DAMAGE).getValue();
-			float f1 = EnchantmentHelper.getDamageBonus(attacker.getMainHandItem(), victim.getType());
+			DamageSource damageSource = attacker.damageSources().playerAttack(attacker);
+			float damage = (float) attacker.getAttributeValue(Attributes.ATTACK_DAMAGE);
+			float f1 = EnchantmentHelper.modifyDamage(attacker.level().getMinecraftWorld(),
+				attacker.getWeaponItem(),
+				victim,
+				damageSource,
+				damage
+			);
 
 			float f2 = 0;
 			boolean shouldKnockback = true;
@@ -75,7 +83,12 @@ public class CombatUtil {
 			if (damage > 0.0F || f1 > 0.0F) {
 				boolean dealtExtraKnockback = false;
 				byte baseKnockbackLevel = 0;
-				int knockbackLevel = baseKnockbackLevel + EnchantmentHelper.getKnockbackBonus(attacker);
+				float knockbackLevel = baseKnockbackLevel +
+					EnchantmentHelper.modifyKnockback(attacker.level().getMinecraftWorld(),
+						attacker.getWeaponItem(),
+						victim,
+						damageSource,
+						baseKnockbackLevel);
 
 				if (attacker.isSprinting() && shouldKnockback) {
 					if (config.getCombatSounds().isKnockbackEnabled()) {
@@ -114,7 +127,7 @@ public class CombatUtil {
 
 				float victimHealth = 0.0F;
 				boolean onFire = false;
-				int fireAspectEnchantmentLevel = EnchantmentHelper.getFireAspect(attacker);
+				int fireAspectEnchantmentLevel = attacker.getWeaponItem().asBukkitCopy().getEnchantmentLevel(Enchantment.FIRE_ASPECT);
 				if (victim instanceof LivingEntity) {
 					victimHealth = ((LivingEntity) victim).getHealth();
 					if (fireAspectEnchantmentLevel > 0 && !victim.isOnFire()) {
@@ -123,7 +136,7 @@ public class CombatUtil {
 
 						if (!combustEvent.isCancelled()) {
 							onFire = true;
-							victim.setRemainingFireTicks(combustEvent.getDuration() * 20);
+							victim.igniteForSeconds(combustEvent.getDuration(), false);
 						}
 					}
 				}
@@ -190,17 +203,12 @@ public class CombatUtil {
 					} else {
 						attacker.setSprinting(!config.isSprintResetEnabled());
 					}
-
-					//((CraftPlayer)attacker.getBukkitEntity()).sendMessage("motX: " + victim.motX + ", motY: " + victim.motY + ", motZ: " + victim.motZ + ", onGround: " + victim.onGround);
-
+					
 					if (shouldSweep && config.isSweepEnabled()) {
-						float f4 = 1.0F + EnchantmentHelper.getSweepingDamageRatio(attacker) * damage;
+						float f4 = (float) (1.0F + attacker.getAttributeValue(Attributes.SWEEPING_DAMAGE_RATIO) * damage);
 						List<LivingEntity> list = attacker.level().getEntitiesOfClass(LivingEntity.class, victim.getBoundingBox().inflate(1.0D, 0.25D, 1.0D));
-						Iterator<LivingEntity> iterator = list.iterator();
 
-						while (iterator.hasNext()) {
-							LivingEntity entityliving = iterator.next();
-
+						for (LivingEntity entityliving : list) {
 							if (entityliving != attacker && entityliving != victim && !attacker.skipAttackInteraction(entityliving) && (!(entityliving instanceof ArmorStand) || !((ArmorStand) entityliving).isMarker()) && attacker.distanceToSqr(entityliving) < 9.0D) {
 								// CraftBukkit start - Only apply knockback if the damage hits
 								if (entityliving.hurt(world.damageSources().playerAttack(attacker).sweep(), f4)) {
@@ -257,11 +265,11 @@ public class CombatUtil {
 					}
 
 					attacker.setLastHurtMob(victim);
-					if (victim instanceof LivingEntity) {
-						EnchantmentHelper.doPostHurtEffects((LivingEntity) victim, attacker);
+					if (victim instanceof LivingEntity livingEntity) {
+						attacker.getWeaponItem().postHurtEnemy(livingEntity, attacker);
 					}
 
-					EnchantmentHelper.doPostDamageEffects(attacker, victim);
+					EnchantmentHelper.doPostAttackEffects(attacker.level().getMinecraftWorld(), attacker, damageSource);
 
 					InteractionHand hand = attacker.swingingArm != null ? attacker.swingingArm : InteractionHand.MAIN_HAND;
 					ItemStack itemstack1 = attacker.getItemInHand(hand);
@@ -288,7 +296,7 @@ public class CombatUtil {
 							org.bukkit.Bukkit.getPluginManager().callEvent(combustEvent);
 
 							if (!combustEvent.isCancelled()) {
-								victim.setRemainingFireTicks(combustEvent.getDuration() * 20);
+								victim.igniteForSeconds(combustEvent.getDuration() * 20, false);
 							}
 							// CraftBukkit end
 						}

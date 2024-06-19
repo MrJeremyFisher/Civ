@@ -8,6 +8,20 @@ import io.papermc.paper.math.Position;
 import io.papermc.paper.threadedregions.scheduler.AsyncScheduler;
 import io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.net.InetAddress;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.minecraft.SharedConstants;
@@ -23,6 +37,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Registry;
 import org.bukkit.Server;
+import org.bukkit.ServerLinks;
 import org.bukkit.ServerTickManager;
 import org.bukkit.StructureType;
 import org.bukkit.Tag;
@@ -64,7 +79,6 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.loot.LootTable;
 import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapView;
-import org.bukkit.packs.DataPackManager;
 import org.bukkit.packs.ResourcePack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
@@ -78,22 +92,7 @@ import org.bukkit.structure.StructureManager;
 import org.bukkit.util.CachedServerIcon;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.net.InetAddress;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation","removal"})
 public class PseudoServer implements Server {
 
 	public static final PseudoServer INSTANCE = new PseudoServer();
@@ -257,7 +256,7 @@ public class PseudoServer implements Server {
 	}
 
 	@Override
-	public @NotNull DataPackManager getDataPackManager() {
+	public @NotNull org.bukkit.packs.DataPackManager getDataPackManager() {
 		throw new NotImplementedException();
 	}
 
@@ -935,6 +934,11 @@ public class PseudoServer implements Server {
 
 	}
 
+	@Override
+	public @NotNull ServerLinks getServerLinks() {
+		return null;
+	}
+
 	@Nullable
 	@Override
 	public Component shutdownMessage() {
@@ -995,12 +999,6 @@ public class PseudoServer implements Server {
 	@Nonnull
 	@Override
 	public ChunkGenerator.ChunkData createChunkData(@Nonnull final World world) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public ChunkGenerator.@NotNull ChunkData createVanillaChunkData(
-		@NotNull World world, int x, int z) {
 		throw new NotImplementedException();
 	}
 
@@ -1193,7 +1191,7 @@ public class PseudoServer implements Server {
 
 	@Nonnull
 	@Override
-	public DatapackManager getDatapackManager() {
+	public @NotNull DatapackManager getDatapackManager() {
 		throw new NotImplementedException();
 	}
 

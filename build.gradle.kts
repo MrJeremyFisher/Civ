@@ -1,7 +1,7 @@
 import com.gradle.enterprise.gradleplugin.GradleEnterpriseExtension
 
 plugins {
-    id("io.papermc.paperweight.userdev") version "1.7.1" apply false
+    id("io.papermc.paperweight.userdev") version "1.7.1" apply false // Update from https://plugins.gradle.org/plugin/io.papermc.paperweight.userdev
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
     id("xyz.jpenilla.run-paper") version "2.2.2" apply false
 }

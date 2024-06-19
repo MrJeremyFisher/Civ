@@ -138,13 +138,13 @@ public class NpcPlayerHelperImpl implements NpcPlayerHelper {
         PlayerDataStorage worldStorage = ((CraftWorld) Bukkit.getWorlds().getFirst()).getHandle().getServer().playerDataStorage;
         CompoundTag playerNbt = worldStorage.load(identity.getName(), identity.getId().toString()).orElse(null);
 
-        // foodTickTimer is now private in 1.8.3 -- still private in 1.12 -- still private in 1.20.6
+        // foodTickTimer is now private in 1.8.3 -- still private in 1.12 -- still private in 1.21
         Field foodTickTimerField;
         int foodTickTimer;
         try {
             //Although we can use Mojang mappings when developing, We need to use the obfuscated field name
-            //until we can run a full Mojmapped server. I personally used this site when updating to 1.20.6:
-            // https://mappings.cephx.dev/1.20.6/net/minecraft/world/food/FoodData.html
+            //until we can run a full Mojmapped server. I personally used this site when updating to 1.21:
+            // https://mappings.cephx.dev/1.21/net/minecraft/world/food/FoodData.html
             foodTickTimerField = FoodData.class.getDeclaredField("d");
             foodTickTimerField.setAccessible(true);
             foodTickTimer = foodTickTimerField.getInt(entity.getFoodData());

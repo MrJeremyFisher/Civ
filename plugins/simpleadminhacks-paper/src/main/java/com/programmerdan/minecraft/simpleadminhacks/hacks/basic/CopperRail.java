@@ -32,12 +32,8 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class CopperRail extends BasicHack {
-
-	// ServerLevel has a private version of this so we will make one ourselves
-	private final io.papermc.paper.util.math.ThreadUnsafeRandom randomTickRandom = new io.papermc.paper.util.math.ThreadUnsafeRandom(ThreadLocalRandom.current().nextLong());
 
 	@AutoLoad
 	private boolean deoxidise;
@@ -108,7 +104,7 @@ public class CopperRail extends BasicHack {
 			// by placing waxed copper next to the rail, entirely preventing the rest of the rail from oxidising.
 			WeatheringCopper copper = (WeatheringCopper) state.getBlock();
 			float chanceModifier = copper.getChanceModifier();
-			if (this.damage * chanceModifier > this.randomTickRandom.nextFloat()) {
+			if (this.damage * chanceModifier > level.random.nextFloat()) {
 				copper.getNext(state).ifPresent((iblockdata2) -> {
 					try {
 						formingBlock = true;
