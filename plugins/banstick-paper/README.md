@@ -38,6 +38,7 @@ How to
 
 **Forgive an IP** Use /forgive 111.11.11.1
 
+
 **Ban a share** Use /doubletap +XxalterxX +XyMyAltsXy
 
 **Revoke a forgiveness** Use /takeitback xXsickVPNsXx PROXY
