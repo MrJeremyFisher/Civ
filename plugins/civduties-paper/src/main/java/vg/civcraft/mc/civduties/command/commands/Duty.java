@@ -6,7 +6,8 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Syntax;
-import java.util.List;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minelink.ctplus.CombatTagPlus;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -55,18 +56,4 @@ public class Duty extends BaseCommand {
             modeManager.disableDutyMode(player, tier);
         }
     }
-
-    public List<String> tabComplete(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("No.");
-            return null;
-        }
-
-        if (args.length < 2) {
-            return CivDuties.getInstance().getConfigManager().getTiersNames((Player) sender);
-        }
-
-        return null;
-    }
-
 }
