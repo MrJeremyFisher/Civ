@@ -6,8 +6,6 @@ import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Syntax;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.minelink.ctplus.CombatTagPlus;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -15,6 +13,7 @@ import org.bukkit.entity.Player;
 import vg.civcraft.mc.civduties.CivDuties;
 import vg.civcraft.mc.civduties.ModeManager;
 import vg.civcraft.mc.civduties.configuration.Tier;
+import java.util.List;
 
 public class Duty extends BaseCommand {
 
@@ -55,5 +54,18 @@ public class Duty extends BaseCommand {
             tier = CivDuties.getInstance().getConfigManager().getTier(tierName);
             modeManager.disableDutyMode(player, tier);
         }
+    }
+
+    public List<String> tabComplete(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("No.");
+            return null;
+        }
+
+        if (args.length < 2) {
+            return CivDuties.getInstance().getConfigManager().getTiersNames((Player) sender);
+        }
+
+        return null;
     }
 }

@@ -102,4 +102,9 @@ public class ListCommand extends BaseCommand {
         }
     }
 
+    public List<String> tabComplete(final CommandSender sender, final String[] arguments) {
+        final String last = ArrayUtils.isEmpty(arguments) ? "" : arguments[arguments.length - 1];
+        return GroupTabCompleter.complete(last, JukeAlertPermissionHandler.getListSnitches(), (Player) sender);
+    }
+
 }

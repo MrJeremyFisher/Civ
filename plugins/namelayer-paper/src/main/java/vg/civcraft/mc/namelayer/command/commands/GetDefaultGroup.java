@@ -31,4 +31,15 @@ public class GetDefaultGroup extends BaseCommandMiddle {
             player.sendMessage(ChatColor.GREEN + "Your current default group is " + x);
         }
     }
+
+    public List<String> tabComplete(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player))
+            return null;
+
+        if (args.length == 1)
+            return GroupTabCompleter.complete(args[0], null, (Player) sender);
+        else {
+            return GroupTabCompleter.complete(null, null, (Player) sender);
+        }
+    }
 }
