@@ -43,7 +43,7 @@ public class VoteCommand extends BaseCommand {
                     ChatColor.GREEN + "Receive rewards for voting on " + site.getName()
                         + ". Click this message to open the link!");
                 text.setClickEvent(
-                    new ClickEvent(Action.OPEN_URL, site.getVotingUrl().replace("%PLAYER%", p.getName())));
+                    new ClickEvent(Action.OPEN_URL, site.getVotingUrl().replace("%PLAYER%", player.getName())));
                 text.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
                     new Text("Click to open the voting link for " + site.getName())));
                 player.spigot().sendMessage(text);
