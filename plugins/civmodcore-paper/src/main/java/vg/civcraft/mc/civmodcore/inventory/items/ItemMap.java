@@ -31,7 +31,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.Repairable;
+import vg.civcraft.mc.civmodcore.inventory.ClonedInventory;
 import vg.civcraft.mc.civmodcore.nbt.NBTSerialization;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
 import vg.civcraft.mc.civmodcore.utilities.MoreMath;
@@ -491,25 +491,17 @@ public class ItemMap {
     }
 
     /**
-     * Checks whether this instance would completly fit into the given inventory
+     * Checks whether this instance would completely fit into the given inventory
      *
      * @param i Inventory to check
-     * @return True if this ItemMap's item representation would completly fit in the inventory, false if not
+     * @return True if this ItemMap's item representation would completely fit in the inventory, false if not
      */
     public boolean fitsIn(Inventory i) {
-        int size;
-        if (i instanceof PlayerInventory) {
-            size = 36;
-        } else {
-            size = i.getSize();
+        ClonedInventory ci = ClonedInventory.cloneInventory(i);
+        for (ItemStack is : this.getItemStackRepresentation()) {
+            if (!ci.addItem(is).isEmpty()) return false;
         }
-        ItemMap invCopy = new ItemMap();
-        for (ItemStack is : i.getStorageContents()) {
-            invCopy.addItemStack(is);
-        }
-        ItemMap instanceCopy = this.clone();
-        instanceCopy.merge(invCopy);
-        return instanceCopy.getItemStackRepresentation().size() <= size;
+        return true;
     }
 
     /**
