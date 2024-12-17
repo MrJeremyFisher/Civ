@@ -37,20 +37,6 @@ import com.github.igotyou.FactoryMod.structures.FurnCraftChestStructure;
 import com.github.igotyou.FactoryMod.structures.PipeStructure;
 import com.github.igotyou.FactoryMod.utility.FactoryGarbageCollector;
 import com.github.igotyou.FactoryMod.utility.FactoryModGUI;
-import org.apache.commons.lang.WordUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitRunnable;
-import vg.civcraft.mc.civmodcore.config.ConfigHelper;
-import vg.civcraft.mc.civmodcore.inventory.CustomItem;
-import vg.civcraft.mc.civmodcore.inventory.items.ItemMap;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,9 +49,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
+import net.kyori.adventure.text.Component;
+import org.apache.commons.lang.WordUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+import vg.civcraft.mc.civmodcore.config.ConfigHelper;
 import static vg.civcraft.mc.civmodcore.config.ConfigHelper.parseTime;
 import static vg.civcraft.mc.civmodcore.config.ConfigHelper.parseTimeAsTicks;
+import vg.civcraft.mc.civmodcore.inventory.CustomItem;
+import vg.civcraft.mc.civmodcore.inventory.items.ItemMap;
 
 public class ConfigParser {
 
@@ -1030,6 +1029,36 @@ public class ConfigParser {
                     if (rec != null) {
                         recipeList.add(rec);
                         usedRecipes.add(rec);
+
+                        if (rec instanceof RepairRecipe repairRecipe) {
+                            ItemStack kitItem = new ItemStack(Material.BARREL);
+                            kitItem.editMeta(meta -> {
+                                    meta.displayName(Component.text(entry.getKey().getName() + " Repair Kit"));
+                                    meta.lore(List.of(Component.text("One kit will repair a %s to full health".formatted(entry.getKey().getName()))));
+                                }
+                            );
+
+                            ProductionRecipe kitRecipe = new ProductionRecipe(
+                                "make_" + entry.getKey().getName() + "_repair_kit",
+                                "Make Repair Kit",
+                                repairRecipe.getProductionTime(),
+                                repairRecipe.getInput(),
+                                new ItemMap(kitItem),
+                                kitItem,
+                                parseProductionRecipeModifier(null)
+                            );
+
+                            RepairRecipe repairWithKitRecipe = new RepairRecipe(
+                                "repair_" + entry.getKey().getName() + "_kit",
+                                "Repair Factory using Repair Kit",
+                                repairRecipe.getProductionTime(),
+                                new ItemMap(kitItem),
+                                10000
+                            );
+
+                            recipeList.addAll(List.of(kitRecipe, repairWithKitRecipe));
+                            usedRecipes.addAll(List.of(kitRecipe, repairWithKitRecipe));
+                        }
                     } else {
                         plugin.warning("Could not find specified recipe " + recipeName + " for factory "
                             + entry.getKey().getName());
