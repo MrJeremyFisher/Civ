@@ -76,6 +76,7 @@ dependencies {
     proxyPlugin(project(path = ":plugins:kiragateway-velocity", configuration = "shadow"))
     proxyPlugin(project(path = ":plugins:namelayer-velocity", configuration = "shadow"))
     proxyPlugin(project(path = ":plugins:zorweth-velocity", configuration = "shadow"))
+    proxyPlugin(project(path = ":plugins:playercounts-velocity", configuration = "shadow"))
 }
 
 val copyPaperPlugins = tasks.register<Copy>("copyPaperPlugins") {

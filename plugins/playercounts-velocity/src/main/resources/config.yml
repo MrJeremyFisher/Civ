@@ -1,0 +1,5 @@
+servers:
+  - host: "localhost"
+    servername: "main"
+  - host: "pvp.localhost"
+    servername: "pvp"
