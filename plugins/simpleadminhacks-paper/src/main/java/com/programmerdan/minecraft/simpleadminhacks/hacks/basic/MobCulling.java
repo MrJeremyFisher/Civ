@@ -9,6 +9,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -21,7 +23,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 public class MobCulling extends BasicHack {
 
-    private BukkitTask task;
+    private ScheduledTask task;
 
     @AutoLoad
     private int turtleAllowance;
@@ -43,17 +45,19 @@ public class MobCulling extends BasicHack {
     @Override
     public void onEnable() {
         super.onEnable();
-        this.task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        this.task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (task) -> {
             for (World world : Bukkit.getWorlds()) {
                 Collection<Turtle> turtles = world.getEntitiesByClass(Turtle.class);
                 turtleCount.put(world, turtles.size());
                 if (turtleMaxAge >= 0) {
                     for (Turtle turtle : turtles) {
-                        if (turtle.getTicksLived() > turtleMaxAge && turtle.customName() == null) {
-                            Location location = turtle.getLocation();
-                            plugin.getLogger().info("Despawning turtle with " + turtle.getTicksLived() + " ticks lived at " + location.getX() + " " + location.getY() + " " + location.getZ());
-                            turtle.remove();
-                        }
+                        turtle.getScheduler().execute(plugin, () -> {
+                            if (turtle.getTicksLived() > turtleMaxAge && turtle.customName() == null) {
+                                Location location = turtle.getLocation();
+                                plugin.getLogger().info("Despawning turtle with " + turtle.getTicksLived() + " ticks lived at " + location.getX() + " " + location.getY() + " " + location.getZ());
+                                turtle.remove();
+                            }
+                        }, null, 0);
                     }
                 }
 
@@ -61,15 +65,17 @@ public class MobCulling extends BasicHack {
                 striderCount.put(world, striders.size());
                 if (striderMaxAge >= 0) {
                     for (Strider strider : striders) {
-                        if (strider.getTicksLived() > striderMaxAge && strider.customName() == null && !strider.hasSaddle()) {
-                            Location location = strider.getLocation();
-                            plugin.getLogger().info("Despawning strider with " + strider.getTicksLived() + " ticks lived at " + location.getX() + " " + location.getY() + " " + location.getZ());
-                            strider.remove();
-                        }
+                        strider.getScheduler().execute(plugin, () -> {
+                            if (strider.getTicksLived() > striderMaxAge && strider.customName() == null && !strider.hasSaddle()) {
+                                Location location = strider.getLocation();
+                                plugin.getLogger().info("Despawning strider with " + strider.getTicksLived() + " ticks lived at " + location.getX() + " " + location.getY() + " " + location.getZ());
+                                strider.remove();
+                            }
+                        }, null, 0);
                     }
                 }
             }
-        }, 0, 20 * 60 * 10);
+        }, 1, 60 * 10);
     }
 
     @Override

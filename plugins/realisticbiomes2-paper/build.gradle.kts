@@ -13,5 +13,5 @@ dependencies {
     compileOnly(project(":plugins:civmodcore-paper"))
 
     compileOnly(libs.worldedit)
-    implementation(libs.commons.math3)
+
 }

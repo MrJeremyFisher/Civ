@@ -5,6 +5,7 @@ author: Okx
 api-version: 1.21.11
 depend: [CivModCore, WorldEdit, Citadel, Bastion, NameLayer, LuckPerms]
 softdepend: [ExilePearl, BreweryX]
+folia-supported: true
 commands:
   pioneer:
     description: Transfer to Zorweth from the main server

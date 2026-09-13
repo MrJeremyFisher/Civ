@@ -80,7 +80,7 @@ public final class BrewIndex extends BasicHack {
             PlayerSettingAPI.registerSetting(this.uniqueBrewsDrunk, null);
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Bukkit.getAsyncScheduler().runNow(plugin, (task) -> {
             this.profile = Bukkit.getServer().createProfile(UUID.fromString("82569b12-c44c-4864-8a73-85a9192ee8f9"), "RedDevel");
             this.profile.complete();
             this.profileLoaded = true;

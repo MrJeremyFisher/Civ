@@ -8,7 +8,7 @@ import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.Bukkit;
 
 public class RabbitHandler {
 
@@ -46,30 +46,26 @@ public class RabbitHandler {
     }
 
     public void beginAsyncListen() {
-        new BukkitRunnable() {
-
-            @Override
-            public void run() {
-                DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                    try {
-                        String message = new String(delivery.getBody(), "UTF-8");
-                        logger.info(" [x] Received '" + message + "'");
-                        inputProcessor.handle(message);
-                    } catch (Exception e) {
-                        logger.severe("Exception in rabbit handling: " + e.toString());
-                        e.printStackTrace();
-                    }
-                };
+        Bukkit.getAsyncScheduler().runNow(KiraBukkitGatewayPlugin.getInstance(), (task) -> {
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 try {
-                    String queue = incomingChannel.queueDeclare().getQueue();
-                    incomingChannel.queueBind(queue, incomingQueue, serverName);
-                    incomingChannel.basicConsume(queue, true, deliverCallback, consumerTag -> {
-                    });
-                } catch (IOException e) {
-                    logger.severe("Error in rabbit listener: " + e.toString());
+                    String message = new String(delivery.getBody(), "UTF-8");
+                    logger.info(" [x] Received '" + message + "'");
+                    inputProcessor.handle(message);
+                } catch (Exception e) {
+                    logger.severe("Exception in rabbit handling: " + e.toString());
+                    e.printStackTrace();
                 }
+            };
+            try {
+                String queue = incomingChannel.queueDeclare().getQueue();
+                incomingChannel.queueBind(queue, incomingQueue, serverName);
+                incomingChannel.basicConsume(queue, true, deliverCallback, consumerTag -> {
+                });
+            } catch (IOException e) {
+                logger.severe("Error in rabbit listener: " + e.toString());
             }
-        }.runTask(KiraBukkitGatewayPlugin.getInstance());
+        });
     }
 
     public void shutdown() {

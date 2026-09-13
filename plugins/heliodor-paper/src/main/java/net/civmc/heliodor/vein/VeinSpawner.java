@@ -49,9 +49,9 @@ public class VeinSpawner {
 
     public void start() {
         if (meteoriteVeinConfig.publicAnnouncementEnabled()) {
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> this::tryPublicSpawn, 60_000, 60_000, TimeUnit.MILLISECONDS);
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> tryPublicSpawn(), 20 * 60, 20 * 60);
         } else {
-            Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task -> this::trySpawns, 60_000, 60_000, TimeUnit.MILLISECONDS);
+            Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task -> trySpawns(), 60_000, 60_000, TimeUnit.MILLISECONDS);
         }
     }
 

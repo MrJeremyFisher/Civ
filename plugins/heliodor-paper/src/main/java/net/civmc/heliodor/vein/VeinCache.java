@@ -1,15 +1,15 @@
 package net.civmc.heliodor.vein;
 
-import net.civmc.heliodor.vein.data.Vein;
-import net.civmc.heliodor.vein.data.VeinPing;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.util.NumberConversions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import net.civmc.heliodor.vein.data.Vein;
+import net.civmc.heliodor.vein.data.VeinPing;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.util.NumberConversions;
 
 public class VeinCache {
 
@@ -242,8 +242,7 @@ public class VeinCache {
                 vein.ores(),
                 vein.oresRemaining()
             );
-            //TODO
-            Bukkit.getRegionScheduler().runTask(plugin, () -> this.veins.add(savedVein));
+            Bukkit.getRegionScheduler().execute(plugin, Bukkit.getWorld(vein.world()), vein.x(), vein.z(), () -> this.veins.add(savedVein));
             return savedVein;
         } else {
             return null;

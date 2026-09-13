@@ -131,21 +131,24 @@ public final class AttrHider extends BasicHack {
                 return;
             }
             final Entity entity = SpigotConversionUtil.getEntityById(player.getWorld(), entityId);
-            if (!(entity instanceof LivingEntity) || entity.getPassengers().contains(player)) {
-                return;
-            }
-            for (final EntityData<?> data : packet.getEntityMetadata()) {
-                // Index 9 is the LivingEntity health field
-                // https://wiki.vg/Entity_metadata#Living_Entity
-                if (data.getIndex() == 9 && data.getType() == EntityDataTypes.FLOAT) {
-                    if ((float) data.getValue() > 0) {
-                        @SuppressWarnings("unchecked")
-                        final EntityData<Float> healthData = (EntityData<Float>) data;
-                        healthData.setValue(1f); // Half a heart
+            if (entity == null) return;
+            entity.getScheduler().execute(SimpleAdminHacks.instance(), () -> {
+                if (!(entity instanceof LivingEntity) || entity.getPassengers().contains(player)) {
+                    return;
+                }
+                for (final EntityData<?> data : packet.getEntityMetadata()) {
+                    // Index 9 is the LivingEntity health field
+                    // https://wiki.vg/Entity_metadata#Living_Entity
+                    if (data.getIndex() == 9 && data.getType() == EntityDataTypes.FLOAT) {
+                        if ((float) data.getValue() > 0) {
+                            @SuppressWarnings("unchecked")
+                            final EntityData<Float> healthData = (EntityData<Float>) data;
+                            healthData.setValue(1f); // Half a heart
+                        }
                     }
                 }
-            }
-            event.markForReEncode(true);
+                event.markForReEncode(true);
+            }, null, 0);
         }
     }
 

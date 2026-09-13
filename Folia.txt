@@ -41,3 +41,12 @@ CTP:
 - See FOLIA comment
 - Utilise 1.21.9 Mannequins for this? 
 
+External:
+Moblimits, supervanish (https://github.com/LeonMangler/SuperVanish), CraftEnhance,
+EntityDetection, Aqua (https://github.com/mk7a-mc/aqua) are missing Folia support
+nuvotifier claims Folia support https://github.com/NuVotifier/NuVotifier/commit/65007e248efc160b2f8d276546e030afb010f301 but
+does not mark it as officially supported in their plugin.yml
+WorldEdit bumped to 7.4.2 which is earliest supporting Folia but not targeting JDK 25
+
+Zorweth paper:
+Just turned on Folia support to register the custom items for factorymod and fiddled with stuff that runs at startup. Needs work.

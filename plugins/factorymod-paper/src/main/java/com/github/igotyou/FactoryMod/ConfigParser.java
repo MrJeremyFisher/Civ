@@ -593,7 +593,7 @@ public class ConfigParser {
                         oilRecipeRepresentation = ((ProductionRecipe) parentRecipe).getRecipeRepresentation();
                     }
                 } else {
-                    oilOutput = ConfigHelper.parseItemMap(oilOutputSection);
+                    oilOutput = ConfigHelpers.parseItemMap(oilOutputSection);
                     oilRecipeRepresentation = parseFirstItem(oilOutputSection);
                 }
                 ProductionRecipeModifier oilModi = parseProductionRecipeModifier(config.getConfigurationSection("modi"));
@@ -616,7 +616,7 @@ public class ConfigParser {
                         oxygenRecipeRepresentation = ((ProductionRecipe) parentRecipe).getRecipeRepresentation();
                     }
                 } else {
-                    oxygenOutput = ConfigHelper.parseItemMap(oxygenOutputSection);
+                    oxygenOutput = ConfigHelpers.parseItemMap(oxygenOutputSection);
                     oxygenRecipeRepresentation = parseFirstItem(oxygenOutputSection);
                 }
                 ProductionRecipeModifier oxygenModi = parseProductionRecipeModifier(config.getConfigurationSection("modi"));

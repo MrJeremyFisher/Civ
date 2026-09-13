@@ -90,7 +90,6 @@ public class SaturationHealthRegenHandler {
         players.add(uuid);
     }
 
-    @Override
     public void run() {
         LinkedList<UUID> players = ticks.get(currentTick);
         if (players != null) {
@@ -105,12 +104,12 @@ public class SaturationHealthRegenHandler {
                 }
                 p.getScheduler().run(Finale.getPlugin(), feedTask -> {
                     if (p.isDead() || p.getHealth() <= 0.0) {
-                        continue;
+                        return;
                     }
                     double maxHealth = p.getAttribute(Attribute.MAX_HEALTH).getValue();
                     if (p.getFoodLevel() >= minimumFood && p.getHealth() < maxHealth) {
                         if (p.getPersistentDataContainer().has(NO_HEALTH_REGEN)) {
-                            continue;
+                            return;
                         }
                         StringBuilder alterHealth = null;
 

@@ -195,7 +195,7 @@ public class CitadelConfigManager extends ConfigParser {
         if (config.isSet("database")) {
             database = ManagedDatasource.construct((ACivMod) plugin, (DatabaseCredentials) config.get("database"));
         }
-        globalBlackList = ConfigHelper.getSafeMaterialList(config, "non_reinforceables");
+        globalBlackList = ConfigHelpers.getSafeMaterialList(config, "non_reinforceables");
         logHostileBreaks = config.getBoolean("logHostileBreaks", true);
         logFriendlyBreaks = config.getBoolean("logFriendlyBreaks", true);
         logDamage = config.getBoolean("logDamage", false);

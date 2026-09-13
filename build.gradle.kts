@@ -32,5 +32,6 @@ allprojects {
         maven("https://repo.infernalsuite.com/repository/maven-snapshots/")
         maven("https://jitpack.io")
         maven("https://repo.ajg0702.us/releases")
+        maven("https://maven.enginehub.org/repo/")
     }
 }

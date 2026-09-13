@@ -188,6 +188,7 @@ public abstract class ScraperWorker implements Runnable {
                 BanStick.getPlugin().warning("Error threshold exceeded; {0} disabled.", name());
             }
         } else {
+            if (!BanStick.getPlugin().isEnabled()) return;
             this.currentTask = Bukkit.getAsyncScheduler().runDelayed(BanStick.getPlugin(),
                 task -> this.run(), jitter(this.delay), TimeUnit.MILLISECONDS);
         }

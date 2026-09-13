@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import io.papermc.paper.registry.entry.RegistryEntryMeta;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -37,7 +36,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scheduler.BukkitRunnable;
 
 public class AsyncPacketHandler implements Listener, PacketListener {
 
@@ -72,7 +70,7 @@ public class AsyncPacketHandler implements Listener, PacketListener {
             event.setCancelled(true);
             attacker.getScheduler().execute(Finale.getPlugin(), () -> {
                 // TODO is level.getEntity safe?
-                RegistryEntryMeta.Craft entity = level.getEntity(packet.getEntityId()).getBukkitEntity();
+                CraftEntity entity = level.getEntity(packet.getEntityId()).getBukkitEntity();
                 Damageable target = entity instanceof Damageable ? (Damageable) entity : null;
 
                 if (target == null || target.isDead() || target.isInvulnerable() ||
@@ -101,7 +99,6 @@ public class AsyncPacketHandler implements Listener, PacketListener {
             }, null, 1L);
         } else if (packetType == PacketType.Play.Client.ENTITY_ACTION) {
             WrapperPlayClientEntityAction packet = new WrapperPlayClientEntityAction(event);
-            Player player = event.getPlayer();
             Player player = event.getPlayer();
             WrapperPlayClientEntityAction.Action playerAction = packet.getAction();
             SprintHandler sprintHandler = Finale.getPlugin().getManager().getSprintHandler();

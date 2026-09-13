@@ -10,6 +10,7 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockState;
 import java.util.List;
 import java.util.Objects;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.civmc.zorweth.ZorwethPlugin;
 import net.civmc.zorweth.flight.FlightComputer;
 import org.bukkit.Bukkit;
@@ -44,7 +45,7 @@ public class BuildRocketRecipe extends InputRecipe {
     private static final DustOptions RED_DUST = new DustOptions(Color.RED, 1.0f);
 
     private int timesRun = 0;
-    private BukkitTask task;
+    private ScheduledTask task;
 
     private final Clipboard clipboard;
     private final String world;
@@ -129,9 +130,9 @@ public class BuildRocketRecipe extends InputRecipe {
         final Region region = clipboard.getRegion();
         final BlockVector3 schematicNorthWestCorner = region.getMinimumPoint();
 
-        final int maxLayer = region.getMaximumPoint().getY() - schematicNorthWestCorner.getY();
+        final int maxLayer = region.getMaximumPoint().y() - schematicNorthWestCorner.y();
         final int[] currentLayer = {0};
-        Bukkit.getScheduler().runTaskTimer(FactoryMod.getInstance(), task -> {
+        Bukkit.getRegionScheduler().runAtFixedRate(FactoryMod.getInstance(), northWestOrigin.getLocation(), task -> {
             if (currentLayer[0] > maxLayer) {
                 task.cancel();
                 return;
@@ -142,11 +143,11 @@ public class BuildRocketRecipe extends InputRecipe {
 
             for (BlockVector3 position : region) {
                 final BlockVector3 relative = position.subtract(schematicNorthWestCorner);
-                if (relative.getY() != currentLayer[0]) {
+                if (relative.y() != currentLayer[0]) {
                     continue;
                 }
                 final BlockState block = clipboard.getBlock(position);
-                final Block target = northWestOrigin.getRelative(relative.getX(), relative.getY(), relative.getZ());
+                final Block target = northWestOrigin.getRelative(relative.x(), relative.y(), relative.z());
 
                 if (!target.getType().isAir()) {
                     continue;
@@ -240,7 +241,7 @@ public class BuildRocketRecipe extends InputRecipe {
             return;
         }
         final Block northWestOrigin = getNorthWestOrigin(fccf);
-        this.task = Bukkit.getScheduler().runTaskTimer(FactoryMod.getInstance(), () -> {
+        this.task = Bukkit.getRegionScheduler().runAtFixedRate(FactoryMod.getInstance(), northWestOrigin.getLocation(), (task) -> {
             this.timesRun++;
             if (timesRun == 40) {
                 task.cancel();

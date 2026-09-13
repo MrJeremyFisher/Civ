@@ -3,6 +3,7 @@ package vg.civcraft.mc.namelayer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import javax.sql.DataSource;
 import net.civmc.nameapi.NameAPI;
@@ -27,9 +28,9 @@ public class NameLayerAPI implements Listener {
         groupManager = man;
         nameAPI = new NameAPI(NameLayerPlugin.getInstance().getSLF4JLogger(), source);
 
-        Bukkit.getScheduler().runTaskTimerAsynchronously(NameLayerPlugin.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runAtFixedRate(NameLayerPlugin.getInstance(), (task) -> {
             NameAPI.PlayerMappingInfo info = nameAPI.getAllPlayerInfo(highestKnown);
-            Bukkit.getScheduler().runTask(NameLayerPlugin.getInstance(), () -> {
+            Bukkit.getAsyncScheduler().runNow(NameLayerPlugin.getInstance(), (subTask) -> {
                 if (info.highest() != highestKnown) {
                     NameLayerPlugin.log(Level.INFO, "Received " + info.nameMapping().size() + " entries, highest " + highestKnown + " -> " + info.highest());
                 }
@@ -38,7 +39,7 @@ public class NameLayerAPI implements Listener {
                 toName.putAll(info.uuidMapping());
                 toUuid.putAll(info.nameMapping());
             });
-        }, 0, 600);
+        }, 0, 30, TimeUnit.SECONDS);
     }
 
     /**

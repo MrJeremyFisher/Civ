@@ -41,15 +41,12 @@ public class JoinListener implements Listener {
         final @NotNull PlayerJoinEvent event
     ) {
         final Player player = event.getPlayer();
-        final String playerName = player.getName();
 
         if (player.getPersistentDataContainer().has(ZORWETH_ROCKET_JOIN, PersistentDataType.BOOLEAN)
             || player.getPersistentDataContainer().has(ZORWETH_OTT_JOIN, PersistentDataType.BOOLEAN)) return;
 
         World world = player.getWorld();
-        String worldName = world.getName();
-
-        if (world.getEnvironment().equals(Environment.NETHER) || world.getEnvironment().equals(Environment.THE_END))
+        if (world.getEnvironment().equals(World.Environment.NETHER) || world.getEnvironment().equals(World.Environment.THE_END))
             return;
 
         final String worldName = world.getName();

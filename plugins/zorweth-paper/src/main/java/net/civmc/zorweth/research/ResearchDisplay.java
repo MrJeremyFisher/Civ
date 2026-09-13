@@ -3,6 +3,7 @@ package net.civmc.zorweth.research;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.civmc.zorweth.ZorwethPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
@@ -22,7 +23,7 @@ public final class ResearchDisplay implements Listener {
     private final BooleanSetting showResearchProgress;
     private final ResearchManager researchManager;
     private final Map<UUID, BossBar> bars = new HashMap<>();
-    private final BukkitTask task;
+    private final ScheduledTask task;
 
     public ResearchDisplay(final ZorwethPlugin plugin, final ResearchManager researchManager) {
         this.researchManager = researchManager;
@@ -40,7 +41,7 @@ public final class ResearchDisplay implements Listener {
                 removeBossBar(player);
             }
         });
-        this.task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        this.task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (task) -> {
             for (final Player player : Bukkit.getOnlinePlayers()) {
                 updateBossBar(player);
             }

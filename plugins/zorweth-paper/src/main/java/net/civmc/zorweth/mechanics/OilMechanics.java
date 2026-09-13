@@ -10,7 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.CraftingRecipe;
-import vg.civcraft.mc.civmodcore.config.ConfigHelper;
+import vg.civcraft.mc.civmodcore.config.ConfigHelpers;
 
 public class OilMechanics {
 
@@ -38,7 +38,7 @@ public class OilMechanics {
         this.oilPos = oilPos;
         this.world = mechanicsWorld;
         this.radius = mechanics.getInt("radius");
-        this.activeExtractorWindowMillis = ConfigHelper.parseTime(mechanics.getString("active-extractor-window", "30s"));
+        this.activeExtractorWindowMillis = ConfigHelpers.parseTime(mechanics.getString("active-extractor-window", "30s"));
         this.activeExtractors = new HashMap<>();
 
         List<CraftingRecipe> recipes = new ArrayList<>(TotemRecipes.getRecipes());

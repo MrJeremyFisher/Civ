@@ -1,5 +1,6 @@
 package net.civmc.zorweth;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,7 +16,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitTask;
 import vg.civcraft.mc.civmodcore.inventory.CustomItem;
 
 public final class RainbowArmour {
@@ -26,9 +26,9 @@ public final class RainbowArmour {
     public static final String RAINBOW_BOOTS = "rainbow_boots";
 
     private static long ticks;
-    private static BukkitTask task;
+    private static ScheduledTask task;
 
-private RainbowArmour() {
+    private RainbowArmour() {
     }
 
     public static void registerCustomItems() {
@@ -43,7 +43,7 @@ private RainbowArmour() {
             task.cancel();
         }
         ticks = 0;
-        task = Bukkit.getScheduler().runTaskTimer(plugin, RainbowArmour::updateWornArmour, 0L, 2L);
+        task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (task) -> updateWornArmour(plugin), 1L, 2L);
     }
 
     private static ItemStack createArmour(final String key, final Material material, final String name) {
@@ -59,19 +59,21 @@ private RainbowArmour() {
         return item;
     }
 
-    private static void updateWornArmour() {
+    private static void updateWornArmour(ZorwethPlugin plugin) {
         ticks += 2;
         final Color color = getRainbowColor(ticks);
         for (final Player wearer : Bukkit.getOnlinePlayers()) {
-            final Map<EquipmentSlot, ItemStack> equipment = getRainbowArmour(wearer.getInventory(), color);
-            if (!equipment.isEmpty()) {
-                sendEquipment(wearer, equipment);
-            }
+            wearer.getScheduler().execute(plugin, () -> {
+                final Map<EquipmentSlot, ItemStack> equipment = getRainbowArmour(wearer.getInventory(), color);
+                if (!equipment.isEmpty()) {
+                    sendEquipment(wearer, equipment);
+                }
+            }, null, 0);
         }
     }
 
     private static Map<EquipmentSlot, ItemStack> getRainbowArmour(final PlayerInventory inventory,
-                                                                   final Color color) {
+                                                                  final Color color) {
         final Map<EquipmentSlot, ItemStack> equipment = new EnumMap<>(EquipmentSlot.class);
         addRainbowArmour(equipment, EquipmentSlot.HEAD, inventory.getHelmet(), color);
         addRainbowArmour(equipment, EquipmentSlot.CHEST, inventory.getChestplate(), color);

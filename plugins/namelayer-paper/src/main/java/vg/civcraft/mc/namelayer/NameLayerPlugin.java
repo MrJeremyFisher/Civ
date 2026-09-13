@@ -7,9 +7,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.sql.DataSource;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -46,7 +48,7 @@ public class NameLayerPlugin extends ACivMod {
     private FileConfiguration config;
     private NameLayerInvalidationConsumer invalidationConsumer;
     private NameLayerWriteClient writeClient;
-    private BukkitTask freshnessCheckTask;
+    private ScheduledTask freshnessCheckTask;
     private long stateLocalVersion;
     private long staleVersionDetectedAtMillis;
     private final AtomicLong fullResyncCount = new AtomicLong();
@@ -76,8 +78,8 @@ public class NameLayerPlugin extends ACivMod {
             PermissionType.initialize();
             blackList = new BlackList();
             groupCache = new NameLayerGroupCache();
-            Bukkit.getScheduler().runTask(this, () -> {
-                Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            Bukkit.getGlobalRegionScheduler().execute(this, () -> {
+                Bukkit.getAsyncScheduler().runNow(this, (task) -> {
                     groupCache = NameLayerGroupCache.loadAll(nameLayerReadDao, getLogger());
                 });
             });
@@ -145,7 +147,7 @@ public class NameLayerPlugin extends ACivMod {
         final long jitterTicks = Math.max(0L, rabbitMqConfig.freshnessCheckJitterSeconds() * 20L);
         final long staleGraceMillis = Math.max(0L, rabbitMqConfig.freshnessCheckStaleGraceSeconds() * 1000L);
         final long initialDelay = intervalTicks + (jitterTicks == 0L ? 0L : ThreadLocalRandom.current().nextLong(jitterTicks + 1L));
-        freshnessCheckTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+        freshnessCheckTask = Bukkit.getAsyncScheduler().runAtFixedRate(this, (task) -> {
             final NameLayerGroupCache activeCache = groupCache;
             if (activeCache == null) {
                 return;
@@ -173,7 +175,7 @@ public class NameLayerPlugin extends ACivMod {
             fullResyncGroupCache();
             stateLocalVersion = 0L;
             staleVersionDetectedAtMillis = 0L;
-        }, initialDelay, intervalTicks);
+        }, initialDelay / 20, intervalTicks / 20, TimeUnit.SECONDS);
     }
 
     public static NameLayerPlugin getInstance() {
