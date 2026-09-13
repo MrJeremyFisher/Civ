@@ -111,58 +111,62 @@ public class AsyncPacketHandler implements Listener, PacketListener {
             Player attacker = event.getPlayer();
             WrapperPlayClientAnimation packet = new WrapperPlayClientAnimation(event);
             InteractionHand hand = packet.getHand();
-            if (hand == InteractionHand.MAIN_HAND && !isDigging.contains(attacker.getUniqueId())) {
-                Block targetBlock = attacker.getTargetBlockExact(4);
-                if (targetBlock != null && targetBlock.getType() != Material.AIR) {
-                    return;
+            attacker.getScheduler().execute(Finale.getPlugin(), () -> {
+                if (hand == InteractionHand.MAIN_HAND && !isDigging.contains(attacker.getUniqueId())) {
+                    Block targetBlock = attacker.getTargetBlockExact(4);
+                    if (targetBlock != null && targetBlock.getType() != Material.AIR) {
+                        return;
+                    }
+                    cpsHandler.updateClicks(attacker);
                 }
-                cpsHandler.updateClicks(attacker);
-            }
+            }, null, 0);
         } else if (packetType == PacketType.Play.Client.PLAYER_DIGGING) {
             Player attacker = event.getPlayer();
 
             WrapperPlayClientPlayerDigging packet = new WrapperPlayClientPlayerDigging(event);
             DiggingAction digType = packet.getAction();
-            if (digType == DiggingAction.STAB) {
-                // no spears
-                event.setCancelled(true);
-                return;
-            }
-
-            if (attacker.getGameMode() != GameMode.SURVIVAL) {
-                return;
-            }
-
-            Vector3i position = packet.getBlockPosition();
-            if (digType == DiggingAction.START_DIGGING) {
-                Block block = attacker.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ());
-                if (block.getType() == Material.BEDROCK || block.getType() == Material.BARRIER && !isDigging.contains(attacker.getUniqueId())) {
-                    isDigging.add(attacker.getUniqueId());
-                    cpsHandler.updateClicks(attacker);
+            attacker.getScheduler().execute(Finale.getPlugin(), () -> {
+                if (digType == DiggingAction.STAB) {
+                    // no spears
+                    event.setCancelled(true);
                     return;
                 }
 
-                float strength = ((CraftWorld) block.getWorld()).getHandle().getBlockState((new BlockPos(position.getX(), position.getY(), position.getZ()))).destroySpeed;
+                if (attacker.getGameMode() != GameMode.SURVIVAL) {
+                    return;
+                }
 
-                long lastStartBreak = lastStartBreaks.getOrDefault(attacker.getUniqueId(), 0L);
-                long timeSinceBreak = (System.currentTimeMillis() - lastStartBreak);
-                lastStartBreaks.put(attacker.getUniqueId(), System.currentTimeMillis());
-                if (strength > 0) {
-                    long lastRemoval = lastRemovals.getOrDefault(attacker.getUniqueId(), 0L);
-                    long timeSinceRemoval = (System.currentTimeMillis() - lastRemoval);
-
-                    if (isDigging.contains(attacker.getUniqueId())) {
+                Vector3i position = packet.getBlockPosition();
+                if (digType == DiggingAction.START_DIGGING) {
+                    Block block = attacker.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ());
+                    if (block.getType() == Material.BEDROCK || block.getType() == Material.BARRIER && !isDigging.contains(attacker.getUniqueId())) {
+                        isDigging.add(attacker.getUniqueId());
+                        cpsHandler.updateClicks(attacker);
                         return;
                     }
-                    isDigging.add(attacker.getUniqueId());
-                    if (timeSinceRemoval >= 48 && timeSinceBreak > 51) {
-                        cpsHandler.updateClicks(attacker);
+
+                    float strength = ((CraftWorld) block.getWorld()).getHandle().getBlockState((new BlockPos(position.getX(), position.getY(), position.getZ()))).destroySpeed;
+
+                    long lastStartBreak = lastStartBreaks.getOrDefault(attacker.getUniqueId(), 0L);
+                    long timeSinceBreak = (System.currentTimeMillis() - lastStartBreak);
+                    lastStartBreaks.put(attacker.getUniqueId(), System.currentTimeMillis());
+                    if (strength > 0) {
+                        long lastRemoval = lastRemovals.getOrDefault(attacker.getUniqueId(), 0L);
+                        long timeSinceRemoval = (System.currentTimeMillis() - lastRemoval);
+
+                        if (isDigging.contains(attacker.getUniqueId())) {
+                            return;
+                        }
+                        isDigging.add(attacker.getUniqueId());
+                        if (timeSinceRemoval >= 48 && timeSinceBreak > 51) {
+                            cpsHandler.updateClicks(attacker);
+                        }
                     }
+                } else if (digType == DiggingAction.CANCELLED_DIGGING || digType == DiggingAction.FINISHED_DIGGING) {
+                    isDigging.remove(attacker.getUniqueId());
+                    lastRemovals.put(attacker.getUniqueId(), System.currentTimeMillis());
                 }
-            } else if (digType == DiggingAction.CANCELLED_DIGGING || digType == DiggingAction.FINISHED_DIGGING) {
-                isDigging.remove(attacker.getUniqueId());
-                lastRemovals.put(attacker.getUniqueId(), System.currentTimeMillis());
-            }
+            }, null, 0);
         }
     }
 
