@@ -41,6 +41,8 @@ public final class CombatTagPlus extends JavaPlugin {
 
     private NpcManager npcManager;
 
+    private static CombatTagPlus plugin;
+
     public PlayerCache getPlayerCache() {
         return playerCache;
     }
@@ -63,6 +65,10 @@ public final class CombatTagPlus extends JavaPlugin {
 
     public NpcManager getNpcManager() {
         return npcManager;
+    }
+
+    public static CombatTagPlus getInstance() {
+        return plugin;
     }
 
     @Override
@@ -121,6 +127,8 @@ public final class CombatTagPlus extends JavaPlugin {
             TagUpdateTask.purgeFinished();
             SafeLogoutTask.purgeFinished();
         }, 3600, 3600);
+
+        plugin = this;
     }
 
     @Override

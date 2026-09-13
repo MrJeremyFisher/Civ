@@ -28,6 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.PlayerDataStorage;
 import net.minecraft.world.level.storage.TagValueOutput;
+import net.minelink.ctplus.CombatTagPlus;
 import net.minelink.ctplus.compat.base.NpcIdentity;
 import net.minelink.ctplus.compat.base.NpcPlayerHelper;
 import org.bukkit.Bukkit;
@@ -77,9 +78,11 @@ public class NpcPlayerHelperImpl implements NpcPlayerHelper {
         }
 
         ServerLevel worldServer = entity.level();
-        worldServer.chunkSource.removeEntity(entity);
-        worldServer.getPlayers(serverPlayer -> serverPlayer instanceof NpcPlayer).remove(entity);
-        removePlayerList(player);
+        entity.getBukkitEntity().getScheduler().execute(CombatTagPlus.getInstance(), () -> {
+            worldServer.chunkSource.removeEntity(entity);
+            worldServer.getPlayers(serverPlayer -> serverPlayer instanceof NpcPlayer).remove(entity);
+            removePlayerList(player);
+        }, null, 0);
     }
 
     @Override

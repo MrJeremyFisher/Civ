@@ -131,9 +131,9 @@ public final class AttrHider extends BasicHack {
                 return;
             }
             final Entity entity = SpigotConversionUtil.getEntityById(player.getWorld(), entityId);
-            if (entity == null) return;
+            if (!(entity instanceof LivingEntity)) return;
             entity.getScheduler().execute(SimpleAdminHacks.instance(), () -> {
-                if (!(entity instanceof LivingEntity) || entity.getPassengers().contains(player)) {
+                if (entity.getPassengers().contains(player)) {
                     return;
                 }
                 for (final EntityData<?> data : packet.getEntityMetadata()) {
