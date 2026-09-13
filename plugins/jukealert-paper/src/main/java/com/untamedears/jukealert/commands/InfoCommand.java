@@ -184,14 +184,14 @@ public class InfoCommand extends BaseCommand {
         if (snitch.getId() == -1) {
             displaySnitchLog(player, snitch, logAppender.getFullLogs(), offset, pageLength, actionType, playerName, censor);
         }
-        Bukkit.getScheduler().runTaskAsynchronously(JukeAlert.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(JukeAlert.getInstance(), (task) -> {
             final List<LoggableAction> actions = logAppender.loadLogs();
-            Bukkit.getScheduler().runTask(JukeAlert.getInstance(), () -> {
+            player.getScheduler().run(JukeAlert.getInstance(), (subTask) -> {
                 if (!player.isOnline()) {
                     return;
                 }
                 displaySnitchLog(player, snitch, actions, offset, pageLength, actionType, playerName, censor);
-            });
+            }, null);
         });
     }
 
