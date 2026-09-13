@@ -6,11 +6,12 @@ import com.programmerdan.minecraft.simpleadminhacks.framework.BasicHack;
 import com.programmerdan.minecraft.simpleadminhacks.framework.BasicHackConfig;
 import com.programmerdan.minecraft.simpleadminhacks.framework.autoload.AutoLoad;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -21,14 +22,12 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
 import vg.civcraft.mc.civmodcore.utilities.MoreCollectionUtils;
 
 public final class AutoRespawn extends BasicHack {
-
-    private final Map<Player, RespawnTimer> respawnTimers = new HashMap<>();
+    private final Map<Player, RespawnTimer> respawnTimers = new ConcurrentHashMap<>();
 
     @AutoLoad
     private long respawnDelay;
@@ -64,16 +63,14 @@ public final class AutoRespawn extends BasicHack {
     public void onPlayerDeath(final PlayerDeathEvent event) {
         final Player player = event.getEntity();
         if (this.respawnDelay <= 0) {
-            plugin().info("Player [" + player.getName() + "] died, respawning. Position:" + player.getLocation());
+            this.logger.info("Player [" + player.getName() + "] died, respawning. Position:" + player.getLocation());
             // This is necessary as respawning the player IMMEDIATELY means also not allowing the
             // death process to occur (such as dropping items) to occur prior to the respawn.
-            Bukkit.getScheduler().runTask(this.plugin, () -> autoRespawnPlayer(player));
+            player.getScheduler().runDelayed(this.plugin, (task) -> autoRespawnPlayer(player), null, 1L);
         } else {
-            plugin().info("Player [" + player.getName() + "] died, " +
+            this.logger.info("Player [" + player.getName() + "] died, " +
                 "setting respawn timer: " + this.respawnDelay + ", position: " + player.getLocation());
-            this.respawnTimers.computeIfPresent(player, (_player, timer) -> timer.stop());
-            this.respawnTimers.put(player, new RespawnTimer(this, player,
-                this.respawnDelay, this::autoRespawnPlayer));
+            this.respawnTimers.put(player, new RespawnTimer(player, this.respawnDelay, this::autoRespawnPlayer));
         }
     }
 
@@ -84,17 +81,20 @@ public final class AutoRespawn extends BasicHack {
             return;
         }
         if (this.loginRespawnDelay <= 0) {
-            plugin().info("Player [" + player.getName() + "] logged in while dead, respawning.");
+            this.logger.info("Player [" + player.getName() + "] logged in while dead, respawning.");
             // This is necessary as respawning the player IMMEDIATELY means also not allowing the
             // death process to occur (such as dropping items) to occur prior to the respawn.
-            Bukkit.getScheduler().runTask(this.plugin, () -> autoRespawnPlayer(player));
+            player.getScheduler().runDelayed(this.plugin, (task) -> autoRespawnPlayer(player), null, 1L);
         } else {
-            plugin().info("Player [" + player.getName() + "] logged in while dead, " +
-                "setting respawn timer: " + this.loginRespawnDelay);
+            this.logger.info("Player [" + player.getName() + "] logged in while dead, setting respawn timer: " + this.loginRespawnDelay);
             this.respawnTimers.computeIfPresent(player, (_player, timer) -> timer.stop());
-            this.respawnTimers.put(player, new RespawnTimer(this, player,
-                this.loginRespawnDelay, this::autoRespawnPlayer));
+            this.respawnTimers.put(player, new RespawnTimer(player, this.loginRespawnDelay, this::autoRespawnPlayer));
         }
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(final PlayerRespawnEvent event) {
+        this.respawnTimers.computeIfPresent(event.getPlayer(), (player, timer) -> timer.stop());
     }
 
     @EventHandler
@@ -102,13 +102,8 @@ public final class AutoRespawn extends BasicHack {
         final Player player = event.getPlayer();
         if (player.isDead()) {
             this.respawnTimers.computeIfPresent(player, (_player, timer) -> timer.stop());
-            plugin().info("Player [" + player.getName() + "] logged out while dead.");
+            this.logger.info("Player [" + player.getName() + "] logged out while dead.");
         }
-    }
-
-    @EventHandler
-    public void onPlayerRespawn(final PlayerRespawnEvent event) {
-        this.respawnTimers.computeIfPresent(event.getPlayer(), (player, timer) -> timer.stop());
     }
 
     private void autoRespawnPlayer(final Player player) {
@@ -124,17 +119,16 @@ public final class AutoRespawn extends BasicHack {
     // Respawn Timer
     // ------------------------------------------------------------
 
-    private static final class RespawnTimer {
-
+    private final class RespawnTimer {
         private final Consumer<Player> handler;
         private BossBar bar;
         private long previousTime;
         private final long setTime;
         private long timeRemaining;
         private long secondTimer;
-        private BukkitTask processor;
+        private ScheduledTask processor;
 
-        RespawnTimer(final AutoRespawn hack, final Player player, final long delay, final Consumer<Player> handler) {
+        RespawnTimer(final Player player, final long delay, final Consumer<Player> handler) {
             this.handler = handler;
             this.previousTime = System.currentTimeMillis();
             this.setTime = this.timeRemaining = delay;
@@ -143,31 +137,31 @@ public final class AutoRespawn extends BasicHack {
             this.bar.setVisible(true);
             this.bar.setProgress(1.0d);
             this.bar.addPlayer(player);
-            this.processor = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    tick();
-                }
-            }.runTaskTimer(hack.plugin(), 1L, 1L);
+            this.processor = player.getScheduler().runAtFixedRate(AutoRespawn.this.plugin(), (task) -> tick(player), null, 1L, 1L);
         }
 
         private String generateBarTitle() {
-            if (this.timeRemaining <= 1000L) {
+            if (this.timeRemaining <= 1_000L) {
                 return "Respawning now.";
             }
-            if (this.timeRemaining < 60000L) {
-                return "Respawning in " + (this.timeRemaining / 1000L) + " seconds.";
+            if (this.timeRemaining < 60_000L) {
+                return "Respawning in " + (int) Math.ceil(this.timeRemaining / 1_000d) + " seconds.";
             }
-            if (this.timeRemaining < 120000L) {
+            if (this.timeRemaining < 120_000L) {
                 return "Respawning in 1 minute.";
             }
-            if (this.timeRemaining < 3600000L) {
-                return "Respawning in " + (this.timeRemaining / 60000L) + " minutes.";
+            if (this.timeRemaining < 3_600_000L) {
+                return "Respawning in " + (int) Math.ceil(this.timeRemaining / 60_000d) + " minutes.";
             }
-            return "Respawning in " + (this.timeRemaining / 3600000L) + " hours.";
+            return "Respawning in " + (int) Math.ceil(this.timeRemaining / 3_600_000d) + " hours.";
         }
 
-        private void tick() {
+        private void tick(
+            final @NotNull Player player
+        ) {
+            if (!player.isDead()) {
+                return;
+            }
             long currentTime = System.currentTimeMillis();
             long timeDifference = currentTime - this.previousTime;
             this.previousTime = currentTime;
@@ -178,11 +172,11 @@ public final class AutoRespawn extends BasicHack {
             }
             this.secondTimer = 1000L;
             this.bar.setTitle(generateBarTitle());
-            this.bar.setProgress(Math.max((double) (this.timeRemaining - 1000L) / (double) this.setTime, 0));
+            this.bar.setProgress(Math.max(this.timeRemaining / (double) this.setTime, 0));
             if (this.timeRemaining > 0) {
                 return;
             }
-            this.bar.getPlayers().forEach(this.handler);
+            this.handler.accept(player);
         }
 
         public RespawnTimer stop() {
@@ -197,7 +191,5 @@ public final class AutoRespawn extends BasicHack {
             }
             return null;
         }
-
     }
-
 }

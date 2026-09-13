@@ -19,7 +19,7 @@ public class Ignore extends BaseCommand {
     @Description("Toggles ignoring a player")
     @CommandCompletion("@allplayers")
     public void execute(Player player, String targetPlayer) {
-        Bukkit.getScheduler().runTaskAsynchronously(CivChat2.getInstance(), () -> {
+        Bukkit.getAsyncScheduler().runNow(CivChat2.getInstance(), task -> {
             OfflinePlayer ignoredPlayerNonFinal = Bukkit.getServer().getPlayer(targetPlayer);
             if (ignoredPlayerNonFinal == null) {
                 ignoredPlayerNonFinal = Bukkit.getServer().getOfflinePlayer(targetPlayer);
@@ -29,7 +29,7 @@ public class Ignore extends BaseCommand {
                 return;
             }
             OfflinePlayer ignoredPlayer = ignoredPlayerNonFinal;
-            Bukkit.getScheduler().runTask(CivChat2.getInstance(), () -> {
+            player.getScheduler().execute(CivChat2.getInstance(), () -> {
                 if (player.equals(ignoredPlayer)) {
                     player.sendMessage(ChatStrings.chatCantIgnoreSelf);
                     return;
@@ -44,7 +44,7 @@ public class Ignore extends BaseCommand {
                     db.removeIgnoredPlayer(player.getUniqueId(), ignoredPlayer.getUniqueId());
                     player.sendMessage(String.format(ChatStrings.chatStoppedIgnoring, ignoredPlayer.getName()));
                 }
-            });
+            }, null, 1L);
         });
     }
 }

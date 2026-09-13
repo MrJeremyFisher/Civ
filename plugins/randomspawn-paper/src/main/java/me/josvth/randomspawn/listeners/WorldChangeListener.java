@@ -2,6 +2,8 @@ package me.josvth.randomspawn.listeners;
 
 import java.util.List;
 import me.josvth.randomspawn.RandomSpawn;
+import me.josvth.randomspawn.RandomSpawnUtils;
+import me.josvth.randomspawn.config.worlds.WorldConfig;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -9,7 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.metadata.FixedMetadataValue;
 
 public class WorldChangeListener implements Listener {
 
@@ -34,32 +35,34 @@ public class WorldChangeListener implements Listener {
         World from = event.getFrom();
         World to = player.getWorld();
 
-        if (player.getBedSpawnLocation() != null && to.equals(player.getBedSpawnLocation().getWorld()))
-            return;      // players bed is in this world
+        WorldConfig toConfig = plugin.configs.worlds.get(to.getName());
+        if (toConfig == null) {
+            plugin.logDebug("Could not find WorldConfig for " + to.getName());
+        }
 
-        List<String> randomSpawnFlags = plugin.yamlHandler.worlds.getStringList(to.getName() + ".randomspawnon");
+        final Location bedLocation = player.getRespawnLocation();
+        if (bedLocation != null && to.equals(bedLocation.getWorld()))
+            return; // players bed is in this world
 
-        if (randomSpawnFlags.contains("teleport-from-" + from.getName())) {
+        if (toConfig.randomSpawnOn().teleportsFrom().contains(from.getName())) {
 
-            Location spawnLocation = plugin.getSpawnSelector().getRandomSpawnLocation(to);
+            Location spawnLocation = plugin.getSpawnSelector().getRandomSpawn(to);
 
             if (spawnLocation == null) {
                 plugin.logDebug(playerName + " got unlucky and was not successfully randomspawned. Default behavior will apply");
                 return;
             }
 
-            plugin.sendGround(player, spawnLocation);
+            player.teleportAsync(spawnLocation);
 
-            player.teleport(spawnLocation.add(0, 5, 0));
+            RandomSpawnUtils.setLastTimeRandomSpawned(plugin, player, System.currentTimeMillis());
 
-            player.setMetadata("lasttimerandomspawned", new FixedMetadataValue(plugin, System.currentTimeMillis()));
-
-            if (plugin.yamlHandler.worlds.getBoolean(to.getName() + ".keeprandomspawns", false)) {
+            if (toConfig.keepRandomSpawn()) {
                 player.setBedSpawnLocation(spawnLocation);
             }
 
-            if (plugin.yamlHandler.config.getString("messages.randomspawned") != null) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.yamlHandler.config.getString("messages.randomspawned")));
+            if (plugin.configs.configYaml.getString("messages.randomspawned") != null) {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.configs.configYaml.getString("messages.randomspawned")));
             }
         }
     }

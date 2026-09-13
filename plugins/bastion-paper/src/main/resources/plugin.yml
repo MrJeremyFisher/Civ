@@ -6,6 +6,7 @@ authors: [ Rourke750, ProgrammerDan, Maxopoly, TealNerd, Aleksey-Terzi ]
 depend: [ CivModCore, Citadel, NameLayer ]
 softdepend: [ MythicMobs ]
 api-version: 1.21.3
+folia-supported: true
 commands:
   bsi:
     description: Gives info on blocks that are clicked

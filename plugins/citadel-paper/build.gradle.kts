@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.paper.userdev)
 }
 
-version = "5.2.4"
+version = "5.2.4-F"
 
 dependencies {
     paperweight {

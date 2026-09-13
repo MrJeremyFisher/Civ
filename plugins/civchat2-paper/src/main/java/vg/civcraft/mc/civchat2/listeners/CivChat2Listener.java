@@ -25,6 +25,10 @@ import vg.civcraft.mc.civchat2.database.CivChatDAO;
 import vg.civcraft.mc.civchat2.event.GlobalChatEvent;
 import vg.civcraft.mc.civchat2.utility.CivChat2SettingsManager;
 import vg.civcraft.mc.namelayer.NameLayerAPI;
+import vg.civcraft.mc.civmodcore.async.PaperRuntime;
+import vg.civcraft.mc.namelayer.GroupManager;
+import vg.civcraft.mc.namelayer.GroupManager.PlayerType;
+import vg.civcraft.mc.namelayer.NameAPI;
 import vg.civcraft.mc.namelayer.group.Group;
 import vg.civcraft.mc.namelayer.permission.PermissionType;
 
@@ -84,8 +88,10 @@ public class CivChat2Listener implements Listener {
         }
 
         // Set current chat group in scoreboard
-        chatman.getScoreboardHUD().updateScoreboardHUD(playerJoinEvent.getPlayer());
-        chatman.getScoreboardHUD().updateAFKScoreboardHUD(playerJoinEvent.getPlayer());
+        if (!PaperRuntime.isFolia()) {
+            chatman.getScoreboardHUD().updateScoreboardHUD(playerJoinEvent.getPlayer());
+            chatman.getScoreboardHUD().updateAFKScoreboardHUD(playerJoinEvent.getPlayer());
+        }
 
         if (CivChat2.getInstance().getPluginConfig().getChatRangeWarn() && !playerJoinEvent.getPlayer().hasPlayedBefore()) {
             localWarn.add(playerJoinEvent.getPlayer().getUniqueId());
@@ -115,54 +121,49 @@ public class CivChat2Listener implements Listener {
         asyncPlayerChatEvent.setCancelled(true);
         // This needs to be done sync to avoid a rare deadlock due to minecraft
         // internals
-        new BukkitRunnable() {
-
-            @Override
-            public void run() {
-
-                Component chatMessage = asyncPlayerChatEvent.message();
-                Player sender = asyncPlayerChatEvent.getPlayer();
-                UUID chatChannel = chatman.getChannel(sender);
-                Group groupChat = chatman.getGroupChatting(sender);
+        Bukkit.getGlobalRegionScheduler().execute(CivChat2.getInstance(), () -> {
+            Component chatMessage = asyncPlayerChatEvent.message();
+            Player sender = asyncPlayerChatEvent.getPlayer();
+            UUID chatChannel = chatman.getChannel(sender);
+            Group groupChat = chatman.getGroupChatting(sender);
 
 
-                if (chatChannel != null) {
-                    StringBuilder sb = new StringBuilder();
-                    Player receiver = Bukkit.getPlayer(chatChannel);
-                    if (receiver != null) {
-                        chatman.sendPrivateMsg(sender, receiver, chatMessage);
-                        return;
-                    } else {
-                        chatman.removeChannel(sender);
-                        String offlineMessage = sb.append(ChatColor.GOLD)
-                            .append("The player you were chatting with has gone offline,")
-                            .append(" you have been moved to regular chat").toString();
-                        sb.delete(0, sb.length());
-                        sender.sendMessage(offlineMessage);
-                        return;
-                    }
+            if (chatChannel != null) {
+                StringBuilder sb = new StringBuilder();
+                Player receiver = Bukkit.getPlayer(chatChannel);
+                if (receiver != null) {
+                    chatman.sendPrivateMsg(sender, receiver, chatMessage);
+                    return;
+                } else {
+                    chatman.removeChannel(sender);
+                    String offlineMessage = sb.append(ChatColor.GOLD)
+                        .append("The player you were chatting with has gone offline,")
+                        .append(" you have been moved to regular chat").toString();
+                    sb.delete(0, sb.length());
+                    sender.sendMessage(offlineMessage);
+                    return;
                 }
-                if (groupChat != null) {
-                    // Player is group chatting
-                    if (NameLayerAPI.getGroupManager().hasAccess(groupChat, sender.getUniqueId(),
-                        PermissionType.getPermission("WRITE_CHAT"))) {
-                        chatman.sendGroupMsg(sender, groupChat, chatMessage);
-                        return;
-                        // Player lost perm to write in the chat
-                    } else {
-                        chatman.removeGroupChat(sender);
-                        sender.sendMessage(ChatColor.RED
-                            + "You have been removed from groupchat because you were removed from the group or lost the permission required to groupchat");
-                    }
-                }
-                Set<Player> playerViewers = new HashSet<>();
-                for (Audience viewer : asyncPlayerChatEvent.viewers()) {
-                    if (viewer instanceof Player playerViewer) {
-                        playerViewers.add(playerViewer);
-                    }
-                }
-                chatman.broadcastMessage(sender, chatMessage, ChatStrings.localChatFormat, playerViewers);
             }
-        }.runTask(CivChat2.getInstance());
+            if (groupChat != null) {
+                // Player is group chatting
+                if (NameLayerAPI.getGroupManager().hasAccess(groupChat, sender.getUniqueId(),
+                    PermissionType.getPermission("WRITE_CHAT"))) {
+                    chatman.sendGroupMsg(sender, groupChat, chatMessage);
+                    return;
+                    // Player lost perm to write in the chat
+                } else {
+                    chatman.removeGroupChat(sender);
+                    sender.sendMessage(ChatColor.RED
+                        + "You have been removed from groupchat because you were removed from the group or lost the permission required to groupchat");
+                }
+            }
+            Set<Player> playerViewers = new HashSet<>();
+            for (Audience viewer : asyncPlayerChatEvent.viewers()) {
+                if (viewer instanceof Player playerViewer) {
+                    playerViewers.add(playerViewer);
+                }
+            }
+            chatman.broadcastMessage(sender, chatMessage, ChatStrings.localChatFormat, playerViewers);
+        });
     }
 }

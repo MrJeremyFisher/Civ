@@ -54,11 +54,11 @@ public class NameColors extends ACivMod implements Listener {
 
     private void resetPrefix(Player player) {
         if (getServer().getPluginManager().isPluginEnabled("TAB")) {
-            Bukkit.getScheduler().runTaskLater(this, () -> {
+            player.getScheduler().execute(this, () -> {
                 // For some reason setPrefix directly doesn't work
                 TAB.getInstance().getConfiguration().getUsers().setProperty(player.getName(), "tabprefix", null, null, null);
                 TAB.getInstance().getFeatureManager().onGroupChange(TAB.getInstance().getPlayer(player.getUniqueId()));
-            }, 20L);
+            }, null, 20L);
         }
     }
 
@@ -67,13 +67,13 @@ public class NameColors extends ACivMod implements Listener {
             CivChat2.getInstance().getCivChat2Manager().removeCustomName(player.getUniqueId());
             if (getServer().getPluginManager().isPluginEnabled("TAB")) {
                 //TAB is enabled, so lets reset the player name.
-                Bukkit.getScheduler().runTaskLater(this, () -> {
+                player.getScheduler().execute(this, () -> {
                     TabPlayer tabPlayer = TabAPI.getInstance()
                         .getPlayer(player.getUniqueId());
                     if (tabPlayer != null) {
                         TabAPI.getInstance().getTabListFormatManager().setName(tabPlayer, null);
                     }
-                }, 20L);
+                }, null, 20L);
             }
         } else {
             Component name = MiniMessage.miniMessage().deserialize("<" + tag + "><name>", Placeholder.component("name", Component.text(player.getName())));
@@ -81,13 +81,13 @@ public class NameColors extends ACivMod implements Listener {
             if (getServer().getPluginManager().isPluginEnabled("TAB")) {
                 //TAB enabled, so now we need to re-apply this name as a "custom name"
                 //Side note: we do this temporarily so players if they lose their permission don't keep their colored name in TAB.
-                Bukkit.getScheduler().runTaskLater(this, () -> {
+                player.getScheduler().execute(this, () -> {
                     TabPlayer tabPlayer = TabAPI.getInstance()
                         .getPlayer(player.getUniqueId());
                     if (tabPlayer != null) {
                         TabAPI.getInstance().getTabListFormatManager().setName(tabPlayer, MiniMessage.miniMessage().serialize(name));
                     }
-                }, 20);
+                }, null, 20);
             }
         }
     }

@@ -87,7 +87,8 @@ public class Finale extends ACivMod {
         }
 
         HandlerList.unregisterAll(this);
-        Bukkit.getScheduler().cancelTasks(this);
+        Bukkit.getAsyncScheduler().cancelTasks(this);
+        Bukkit.getGlobalRegionScheduler().cancelTasks(this);
     }
 
     @Override

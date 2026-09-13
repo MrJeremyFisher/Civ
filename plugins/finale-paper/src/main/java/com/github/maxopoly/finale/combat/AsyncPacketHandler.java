@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import io.papermc.paper.registry.entry.RegistryEntryMeta;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -69,40 +70,38 @@ public class AsyncPacketHandler implements Listener, PacketListener {
                 return;
             }
             event.setCancelled(true);
-            new BukkitRunnable() {
+            attacker.getScheduler().execute(Finale.getPlugin(), () -> {
+                // TODO is level.getEntity safe?
+                RegistryEntryMeta.Craft entity = level.getEntity(packet.getEntityId()).getBukkitEntity();
+                Damageable target = entity instanceof Damageable ? (Damageable) entity : null;
 
-                @Override
-                public void run() {
-                    CraftEntity entity = level.getEntity(packet.getEntityId()).getBukkitEntity();
-                    Damageable target = entity instanceof Damageable ? (Damageable) entity : null;
-
-                    if (target == null || target.isDead() || target.isInvulnerable() ||
-                        !world.getUID().equals(target.getWorld().getUID()) || !(target instanceof LivingEntity)) {
-                        DamageSources damageSources = ((CraftWorld) world).getHandle().damageSources();
-                        entity.getHandle().hurt(damageSources.playerAttack(((CraftPlayer) attacker).getHandle()), (float) ((CraftPlayer) attacker).getHandle().getAttribute(Attributes.ATTACK_DAMAGE).getValue());
-                        return;
-                    }
-
-                    double distanceSquared = attacker.getLocation().distanceSquared(target.getLocation());
-
-                    if (distanceSquared > (cc.getMaxReach() * cc.getMaxReach())) {
-                        return;
-                    }
-
-                    if (cpsHandler.getCPS(attacker.getUniqueId()) >= cc.getCPSLimit()) {
-                        attacker.sendMessage(ChatColor.RED + "You've hit CPS limit of " + cc.getCPSLimit() + "!");
-                        return;
-                    }
-
-                    if (attacker.getGameMode() == GameMode.SPECTATOR) {
-                        attacker.setSpectatorTarget(target);
-                    } else {
-                        CombatUtil.attack(attacker, ((CraftEntity) target).getHandle());
-                    }
+                if (target == null || target.isDead() || target.isInvulnerable() ||
+                    !world.getUID().equals(target.getWorld().getUID()) || !(target instanceof LivingEntity)) {
+                    DamageSources damageSources = ((CraftWorld) world).getHandle().damageSources();
+                    entity.getHandle().hurt(damageSources.playerAttack(((CraftPlayer) attacker).getHandle()), (float) ((CraftPlayer) attacker).getHandle().getAttribute(Attributes.ATTACK_DAMAGE).getValue());
+                    return;
                 }
-            }.runTask(Finale.getPlugin());
+
+                double distanceSquared = attacker.getLocation().distanceSquared(target.getLocation());
+
+                if (distanceSquared > (cc.getMaxReach() * cc.getMaxReach())) {
+                    return;
+                }
+
+                if (cpsHandler.getCPS(attacker.getUniqueId()) >= cc.getCPSLimit()) {
+                    attacker.sendMessage(ChatColor.RED + "You've hit CPS limit of " + cc.getCPSLimit() + "!");
+                    return;
+                }
+
+                if (attacker.getGameMode() == GameMode.SPECTATOR) {
+                    attacker.setSpectatorTarget(target);
+                } else {
+                    CombatUtil.attack(attacker, ((CraftEntity) target).getHandle());
+                }
+            }, null, 1L);
         } else if (packetType == PacketType.Play.Client.ENTITY_ACTION) {
             WrapperPlayClientEntityAction packet = new WrapperPlayClientEntityAction(event);
+            Player player = event.getPlayer();
             Player player = event.getPlayer();
             WrapperPlayClientEntityAction.Action playerAction = packet.getAction();
             SprintHandler sprintHandler = Finale.getPlugin().getManager().getSprintHandler();

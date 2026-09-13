@@ -30,6 +30,7 @@ import vg.civcraft.mc.civchat2.prefix.StarManager;
 import vg.civcraft.mc.civchat2.utility.CivChat2Config;
 import vg.civcraft.mc.civchat2.utility.CivChat2FileLogger;
 import vg.civcraft.mc.civchat2.utility.ScoreboardHUD;
+import vg.civcraft.mc.civmodcore.async.PaperRuntime;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
 import vg.civcraft.mc.civmodcore.players.settings.impl.LongSetting;
 import vg.civcraft.mc.civmodcore.utilities.TextUtil;
@@ -92,16 +93,14 @@ public class CivChat2Manager {
         groupChatChannels = new HashMap<>();
         replyList = new HashMap<>();
         afkPlayers = new HashMap<>();
-        scoreboardHUD = new ScoreboardHUD();
+        if (!PaperRuntime.isFolia()) {
+            scoreboardHUD = new ScoreboardHUD();
+        }
         bannedWords = loadBannedWords();
         muteTimeSeconds = config.getMuteTimeSeconds();
         banSetting = instance.getCivChat2SettingsManager().getGlobalChatMuteSetting();
         filterRelayGroup = config.getFilterRelayGroup();
     }
-
-
-
-
 
     /**
      * Gets the channel for player to player chat
@@ -126,7 +125,9 @@ public class CivChat2Manager {
         Preconditions.checkNotNull(player, "player");
 
         chatChannels.remove(player.getUniqueId());
-        scoreboardHUD.updateScoreboardHUD(player);
+        if (!PaperRuntime.isFolia()) {
+            scoreboardHUD.updateScoreboardHUD(player);
+        }
     }
 
     /**
@@ -146,7 +147,9 @@ public class CivChat2Manager {
         } else {
             chatChannels.put(player1.getUniqueId(), player2.getUniqueId());
         }
-        scoreboardHUD.updateScoreboardHUD(player1);
+        if (!PaperRuntime.isFolia()) {
+            scoreboardHUD.updateScoreboardHUD(player1);
+        }
     }
 
     /**
@@ -342,7 +345,9 @@ public class CivChat2Manager {
             afkPlayers.remove(player.getUniqueId());
         }
 
-        scoreboardHUD.updateAFKScoreboardHUD(player);
+        if (!PaperRuntime.isFolia()) {
+            scoreboardHUD.updateAFKScoreboardHUD(player);
+        }
         return afkStatus;
     }
 
@@ -358,12 +363,16 @@ public class CivChat2Manager {
         if (isPlayerAfk(player)) {
             afkPlayers.remove(player.getUniqueId());
 
-            scoreboardHUD.updateAFKScoreboardHUD(player);
+            if (!PaperRuntime.isFolia()) {
+                scoreboardHUD.updateAFKScoreboardHUD(player);
+            }
             return false;
         }
         afkPlayers.put(player.getUniqueId(), afkMsg);
 
-        scoreboardHUD.updateAFKScoreboardHUD(player);
+        if (!PaperRuntime.isFolia()) {
+            scoreboardHUD.updateAFKScoreboardHUD(player);
+        }
         return true;
     }
 
@@ -409,7 +418,9 @@ public class CivChat2Manager {
         Preconditions.checkNotNull(group, "group");
 
         groupChatChannels.put(player.getUniqueId(), group.getName());
-        scoreboardHUD.updateScoreboardHUD(player);
+        if (!PaperRuntime.isFolia()) {
+            scoreboardHUD.updateScoreboardHUD(player);
+        }
     }
 
 
@@ -549,7 +560,9 @@ public class CivChat2Manager {
         Preconditions.checkNotNull(player, "player");
 
         groupChatChannels.remove(player.getUniqueId());
-        scoreboardHUD.updateScoreboardHUD(player);
+        if (!PaperRuntime.isFolia()) {
+            scoreboardHUD.updateScoreboardHUD(player);
+        }
     }
 
     /**

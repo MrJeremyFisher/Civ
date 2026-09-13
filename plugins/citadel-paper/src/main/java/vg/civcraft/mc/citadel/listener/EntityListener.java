@@ -263,7 +263,7 @@ public class EntityListener implements Listener {
         }
         player.sendMessage(ChatColor.RED + "You cannot place those on blocks you don't have permissions for.");
         event.setCancelled(true);
-        Bukkit.getScheduler().runTaskLater(Citadel.getInstance(), player::updateInventory, 1L);
+        player.getScheduler().execute(Citadel.getInstance(), player::updateInventory, null, 1L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

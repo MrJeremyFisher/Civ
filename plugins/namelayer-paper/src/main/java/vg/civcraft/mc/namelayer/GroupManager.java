@@ -162,7 +162,7 @@ public class GroupManager {
             return;
         }
         final NameLayerPlugin plugin = NameLayerPlugin.getInstance();
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Bukkit.getAsyncScheduler().runNow(plugin, (task) -> {
             final NameLayerWriteRequest request = NameLayerWriteRequest.create(
                 plugin.getConfig().getString("rabbitmq.serverId", "paper"),
                 actorUuid,
@@ -203,7 +203,7 @@ public class GroupManager {
     }
 
     private void completeGroupWriteOnMain(final Consumer<GroupWriteResult> callback, final GroupWriteResult result) {
-        Bukkit.getScheduler().runTask(NameLayerPlugin.getInstance(), () -> callback.accept(result));
+        Bukkit.getGlobalRegionScheduler().run(NameLayerPlugin.getInstance(), (task) -> callback.accept(result));
     }
 
     private String encodeDefaultPermissions(final Collection<PermissionType> permissions) {

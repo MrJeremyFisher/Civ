@@ -45,14 +45,9 @@ public class HologramManager {
         this.holograms = new HashMap<>();
         this.activeHolos = new HashSet<>();
         this.settingMan = settingMan;
-        new BukkitRunnable() {
-
-            @Override
-            public void run() {
-                updateHolograms();
-            }
-
-        }.runTaskTimer(Citadel.getInstance(), 2L, 2L);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(Citadel.getInstance(), task -> {
+            updateHolograms();
+        }, 2L, 2L);
     }
 
     public void showInfoHolo(Reinforcement rein, Player player) {
@@ -124,6 +119,7 @@ public class HologramManager {
             // showing a bit too much information if the player gets kicked while a holo is
             // already visible does not matter
             this.hasPermission = reinforcement.hasPermission(player, CitadelPermissionHandler.getInfo());
+            cachedPlayerLocation = player.getLocation();
         }
 
         void show() {

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -48,9 +49,9 @@ public class VeinSpawner {
 
     public void start() {
         if (meteoriteVeinConfig.publicAnnouncementEnabled()) {
-            Bukkit.getScheduler().runTaskTimer(plugin, this::tryPublicSpawn, 20 * 60, 20 * 60);
+            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> this::tryPublicSpawn, 60_000, 60_000, TimeUnit.MILLISECONDS);
         } else {
-            Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::trySpawns, 20 * 60, 20 * 60);
+            Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task -> this::trySpawns, 60_000, 60_000, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -345,7 +346,7 @@ public class VeinSpawner {
 
         AtomicReference<MeteoritePos> blocksAtomic = new AtomicReference<>();
         CountDownLatch blocksReady = new CountDownLatch(1);
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Bukkit.getRegionScheduler().execute(plugin, world, x, z, () -> {
             try {
                 int blocks = 0;
                 Block spawnBlock = world.getHighestBlockAt(x, z);

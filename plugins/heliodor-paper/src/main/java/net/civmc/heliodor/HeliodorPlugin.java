@@ -90,7 +90,7 @@ public class HeliodorPlugin extends ACivMod {
         getServer().getPluginManager().registerEvents(farmBeaconListener, this);
         farmBeaconListener.protect(protector);
 
-        Bukkit.getScheduler().runTaskTimer(this, this.recipes, 15 * 20, 15 * 20);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, task -> this.recipes.run(), 15 * 20, 15 * 20);
 
         getCommand("heliodor").setExecutor(new HeliodorDebugCommand(veinCache, veinSpawner, oreLocationsKey));
         final boolean publicAnnouncementsEnabled = getConfig()
@@ -155,6 +155,7 @@ public class HeliodorPlugin extends ACivMod {
         SqlVeinDao veinDao = new SqlVeinDao(database);
         veinDao.registerMigrations();
         veinCache = new VeinCache(this, veinDao);
+        this.veinCache.load();
         oreLocationsKey = new NamespacedKey(this, "ore_locations");
         getServer().getPluginManager().registerEvents(new OreBreakListener(oreLocationsKey), this);
         getServer().getPluginManager().registerEvents(new VeinBreakListener(oreLocationsKey, veinCache), this);

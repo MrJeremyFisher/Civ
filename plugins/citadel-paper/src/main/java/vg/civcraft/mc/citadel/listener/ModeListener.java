@@ -34,6 +34,7 @@ import vg.civcraft.mc.citadel.model.HologramManager;
 import vg.civcraft.mc.citadel.model.Reinforcement;
 import vg.civcraft.mc.citadel.playerstate.AbstractPlayerState;
 import vg.civcraft.mc.citadel.playerstate.PlayerStateManager;
+import vg.civcraft.mc.civmodcore.async.PaperRuntime;
 import vg.civcraft.mc.civmodcore.players.scoreboard.bottom.BottomLine;
 import vg.civcraft.mc.civmodcore.players.scoreboard.bottom.BottomLineAPI;
 import vg.civcraft.mc.civmodcore.players.scoreboard.side.CivScoreBoard;
@@ -62,34 +63,48 @@ public class ModeListener implements Listener {
     public ModeListener(Citadel citadel) {
         interactFixer = new DoubleInteractFixer(citadel);
         this.stateMan = citadel.getStateManager();
-        this.ctiBottomLine = BottomLineAPI.createBottomLine("ctiDisplay", 3);
-        this.ctiBoard = ScoreBoardAPI.createBoard("ctiDisplay");
-        this.ctbBottomLine = BottomLineAPI.createBottomLine("ctbDisplay", 3);
-        this.ctbBoard = ScoreBoardAPI.createBoard("ctbDisplay");
-        this.reinBottomLine = BottomLineAPI.createBottomLine("ctreinDisplay", 3);
-        this.reinBoard = ScoreBoardAPI.createBoard("ctreinDisplay");
         this.settingMan = Citadel.getInstance().getSettingManager();
+        if (!PaperRuntime.isFolia()) {
+            this.ctiBottomLine = BottomLineAPI.createBottomLine("ctiDisplay", 3);
+            this.ctiBoard = ScoreBoardAPI.createBoard("ctiDisplay");
+            this.ctbBottomLine = BottomLineAPI.createBottomLine("ctbDisplay", 3);
+            this.ctbBoard = ScoreBoardAPI.createBoard("ctbDisplay");
+            this.reinBottomLine = BottomLineAPI.createBottomLine("ctreinDisplay", 3);
+            this.reinBoard = ScoreBoardAPI.createBoard("ctreinDisplay");
+        }
         settingMan.getInformationMode().registerListener(new SettingChangeListener<Boolean>() {
             @Override
             public void handle(UUID player, PlayerSetting<Boolean> setting, Boolean oldValue, Boolean newValue) {
+                if (PaperRuntime.isFolia()) {
+                    return;
+                }
                 setCtiOverlay(Bukkit.getPlayer(player), newValue);
             }
         });
         settingMan.getInformationLocationSetting().registerListener(new SettingChangeListener<String>() {
             @Override
             public void handle(UUID player, PlayerSetting<String> setting, String oldValue, String newValue) {
+                if (PaperRuntime.isFolia()) {
+                    return;
+                }
                 setCtiOverlay(Bukkit.getPlayer(player), settingMan.getInformationMode().getValue(player));
             }
         });
         settingMan.getBypass().registerListener(new SettingChangeListener<Boolean>() {
             @Override
             public void handle(UUID player, PlayerSetting<Boolean> setting, Boolean oldValue, Boolean newValue) {
+                if (PaperRuntime.isFolia()) {
+                    return;
+                }
                 setCtbOverlay(Bukkit.getPlayer(player), newValue);
             }
         });
         settingMan.getBypassLocationSetting().registerListener(new SettingChangeListener<String>() {
             @Override
             public void handle(UUID player, PlayerSetting<String> setting, String oldValue, String newValue) {
+                if (PaperRuntime.isFolia()) {
+                    return;
+                }
                 setCtbOverlay(Bukkit.getPlayer(player), settingMan.getBypass().getValue(player));
             }
         });
@@ -97,6 +112,9 @@ public class ModeListener implements Listener {
 
             @Override
             public void handle(UUID player, PlayerSetting<String> setting, String oldValue, String newValue) {
+                if (PaperRuntime.isFolia()) {
+                    return;
+                }
                 setReinModeOverlay(Bukkit.getPlayer(player), stateMan.getState(Bukkit.getPlayer(player)));
             }
         });
@@ -104,27 +122,42 @@ public class ModeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void modeChange(ReinforcementModeSwitchEvent event) {
+        if (PaperRuntime.isFolia()) {
+            return;
+        }
         setReinModeOverlay(event.getPlayer(), event.getNewMode());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void playerLogin(PlayerJoinEvent e) {
+        if (PaperRuntime.isFolia()) {
+            return;
+        }
         setCtiOverlay(e.getPlayer(), settingMan.getInformationMode().getValue(e.getPlayer()));
         setCtbOverlay(e.getPlayer(), settingMan.getBypass().getValue(e.getPlayer()));
         setReinModeOverlay(e.getPlayer(), stateMan.getState(e.getPlayer()));
     }
 
     private void setCtiOverlay(Player player, boolean state) {
+        if (PaperRuntime.isFolia()) {
+            return;
+        }
         updateDisplaySetting(player, settingMan.getInformationLocationSetting(), state, ChatColor.GOLD + "CTI",
             ctiBottomLine, ctiBoard);
     }
 
     private void setCtbOverlay(Player player, boolean state) {
+        if (PaperRuntime.isFolia()) {
+            return;
+        }
         updateDisplaySetting(player, settingMan.getBypassLocationSetting(), state, ChatColor.AQUA + "CTB",
             ctbBottomLine, ctbBoard);
     }
 
     private void setReinModeOverlay(Player player, AbstractPlayerState state) {
+        if (PaperRuntime.isFolia()) {
+            return;
+        }
         if (state == null) {
             return;
         }
@@ -134,6 +167,9 @@ public class ModeListener implements Listener {
 
     private static void updateDisplaySetting(Player player, DisplayLocationSetting locSetting, boolean state, String text,
                                              BottomLine bottomLine, CivScoreBoard scoreBoard) {
+        if (PaperRuntime.isFolia()) {
+            return;
+        }
         if (player == null) {
             return;
         }

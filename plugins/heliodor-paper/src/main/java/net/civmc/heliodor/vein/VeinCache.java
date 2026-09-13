@@ -27,7 +27,7 @@ public class VeinCache {
     public void load() {
         this.veins.addAll(dao.getVeins());
 
-        Bukkit.getScheduler().runTaskTimer(plugin, this::save, 20 * 60, 20 * 60);
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, task -> this.save(), 60000, 60000);
     }
 
     public void save() {
@@ -37,7 +37,7 @@ public class VeinCache {
         if (Bukkit.isStopping()) {
             updateVeins(veins, additionalVeinBlocksMined, veinOresMined);
         } else {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> updateVeins(veins, additionalVeinBlocksMined, veinOresMined));
+            Bukkit.getAsyncScheduler().runNow(plugin, task -> updateVeins(veins, additionalVeinBlocksMined, veinOresMined));
         }
     }
 
@@ -80,7 +80,7 @@ public class VeinCache {
             // It's not necessary to synchronize internal state anymore; we can terminate early
             return;
         }
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Bukkit.getGlobalRegionScheduler().execute(plugin, () -> {
             for (Vein updatedVein : updatedVeins) {
                 for (int i = 0; i < this.veins.size(); i++) {
                     Vein vein = this.veins.get(i);
@@ -242,7 +242,8 @@ public class VeinCache {
                 vein.ores(),
                 vein.oresRemaining()
             );
-            Bukkit.getScheduler().runTask(plugin, () -> this.veins.add(savedVein));
+            //TODO
+            Bukkit.getRegionScheduler().runTask(plugin, () -> this.veins.add(savedVein));
             return savedVein;
         } else {
             return null;
