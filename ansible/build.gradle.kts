@@ -1,7 +1,17 @@
+import io.papermc.paperweight.userdev.attribute.Obfuscation
+
 val paperPlugin = configurations.create("paperPlugin")
 val pvpPlugin = configurations.create("pvpPlugin")
 val proxyPlugin = configurations.create("proxyPlugin")
 val zorwethPlugin = configurations.create("zorwethPlugin")
+
+configurations {
+    all {
+        attributes {
+            attribute(Obfuscation.OBFUSCATION_ATTRIBUTE, objects.named(Obfuscation.OBFUSCATED))
+        }
+    }
+}
 
 dependencies {
     paperPlugin(project(path = ":plugins:banstick-paper", configuration = "shadow"))
